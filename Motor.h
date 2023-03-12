@@ -5,7 +5,7 @@
 #include "GearBox.h"
 #include "PID.h"
 
-enum class ControlType {
+enum class MotorControlType {
     position,
     velocity
 };
@@ -19,17 +19,15 @@ public: // Public attributes
 
     GearBox gear_box;
 
-    ControlType control_type;
-    PIDController *P_position;
-    PIDController *PI_velocity;
+    MotorControlType control_type;
     /*
     the objects below are created elsewhere, this is why they are implemented as pointers.
     In order to be used both inside of the this object and outside, where they were created,
     this way no errors are introduced by creating a copy of those objects
     */
-
     Encoder *encoder; // Pointer so that it can only point to Encoder objects
     DCMotorDriver *driver;
+    PIDController *controller;
 
 public: // Public methods
     /**
@@ -38,16 +36,21 @@ public: // Public methods
      * @param max_speed Maximum speed of the output shaft of your motor
      * @param gear_ratio In case your motor has a gearbox
      */
-    DCMotor (float max_speed, float gear_ratio=1.f);
+    DCMotor(float max_speed, float gear_ratio=1.f, float gear_ratio_corr_factor=1.f);
 
-    void init(ControlType cont_type);
+    void setControlType(MotorControlType cont_type); /// \todo evaluate if init() is the best way to call this method
     void linkEncoder(Encoder *_encoder);
     void linkDriver(DCMotorDriver *_driver);
+    void linkController(PIDController *_controller);
 
     void changePositionSetPoint(float pos_sp);
     void changeVelocitySetPoint(float vel_sp);
     void calculateControl();
     void updateStates();
+
+    float getPosition();
+    float getVelocity();
+
 
 private:
     float position; /// Absolute angle of output shaft
